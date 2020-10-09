@@ -10,7 +10,7 @@ def get_version(package: str = package_name) -> str:
     Return version.
     """
     _globals: dict = {}
-    with open(os.path.join(here, package, "version.py")) as f:
+    with open(os.path.join(here, package, "__version__.py")) as f:
         exec(f.read(), _globals)
 
     return _globals["__version__"]
