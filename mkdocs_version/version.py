@@ -3,12 +3,12 @@ from subprocess import check_output
 
 
 def get_current_branch() -> str:
-    output: bytes = check_output("git rev-parse --abbrev-ref HEAD")
+    output: bytes = check_output(["git", "rev-parse", "--abbrev-ref", "HEAD"])
     return output.decode("utf8").strip()
 
 
 def get_all_tags() -> List[str]:
-    output: bytes = check_output("git tag")
+    output: bytes = check_output(["git", "tag"])
     return sorted(
         sorted(
             sorted(
