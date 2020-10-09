@@ -55,7 +55,9 @@ def _rmtree(dirpath: str):
         pass
 
 
-def generate_version_selector(current_version: str, versions: typing.List[str]) -> str:
+def generate_version_selector(
+    current_version: str, versions: typing.List[str], current_link: str
+) -> str:
     page = '<div id="version-select">'
     page += """
     <div class="version-select">
@@ -67,10 +69,11 @@ def generate_version_selector(current_version: str, versions: typing.List[str]) 
 
     f = lambda version: """
         <div class="version-select">
-            <a href="/{version}/">{version}</a>
+            <a href="/{version}/{current_link}">{version}</a>
         </div>
     """.format(
-        version=version.strip("v")
+        version=version.strip("v"),
+        current_link=current_link.lstrip("/"),
     )
     page += "".join(
         reversed(list(map(f, versions)) + list(map(f, ("stable", "master"))))
@@ -114,11 +117,21 @@ def generate_version_selector(current_version: str, versions: typing.List[str]) 
     return page
 
 
-def append_version_selector(dirpath: str, selector: str) -> None:
+def append_version_selector(
+    dirpath: str, current_version: str, versions: typing.List[str]
+) -> None:
     dirpath = pathlib.Path(dirpath)
     for html_path in dirpath.glob("**/*.html"):
+        current_link = str(html_path.relative_to(dirpath)).replace("\\", "/")
+        if current_link.endswith("index.html"):
+            current_link = current_link[: -len("index.html")]
+
         html_path.write_text(
-            html_path.read_text("utf8").replace("</body>", selector + "\n</body>"),
+            html_path.read_text("utf8").replace(
+                "</body>",
+                generate_version_selector(current_version, versions, current_link)
+                + "\n</body>",
+            ),
             encoding="utf8",
         )
 
@@ -152,22 +165,16 @@ def build(version: typing.List[str], min_version: str, minor: bool):
         os.makedirs("site", exist_ok=True)
         # 构建当前分支最新的文档
         execute("mkdocs build --clean --site-dir site/master")
-        append_version_selector(
-            "site/master", generate_version_selector("master", tags)
-        )
+        append_version_selector("site/master", "master", tags)
         # 构建所有 tag 的文档
         for v, tag in tags.items():
             execute(f"git checkout {tag}")
             execute(f"mkdocs build --clean --site-dir site/{v.strip('v')}")
-            append_version_selector(
-                f"site/{v.strip('v')}", generate_version_selector(v, tags)
-            )
+            append_version_selector(f"site/{v.strip('v')}", v, tags)
         # 构建 stable 版本的文档
         execute(f"git checkout {get_stable_tag()}")
         execute("mkdocs build --clean --site-dir site/stable")
-        append_version_selector(
-            "site/stable", generate_version_selector("stable", tags)
-        )
+        append_version_selector("site/stable", "stable", tags)
         # 编写首页跳转
         with open("site/index.html", "w+") as file:
             file.write('<meta http-equiv="refresh" content="0; url=/stable/" />')
