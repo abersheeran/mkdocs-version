@@ -140,15 +140,14 @@ def append_version_selector(
 
 
 @main.command(help="Build multi version docs by mkdocs")
-@click.option(
-    "-V",
-    "--version",
-    multiple=True,
-    type=click.Choice(get_all_tags()),
-)
+@click.option("--version", multiple=True, type=click.Choice(get_all_tags()))
 @click.option("--min-version", type=click.Choice(get_all_tags()))
-@click.option("--minor", is_flag=True)
-@click.option("--version-regex", default=r"(?P<version>.*)")
+@click.option("--minor", is_flag=True, help="Generate only minor version documents")
+@click.option(
+    "--version-regex",
+    default=r"(?P<version>.*)",
+    help='Parse version, like: "v(?P<version>.*)"',
+)
 def build(version: typing.List[str], min_version: str, minor: bool, version_regex: str):
     here = os.getcwd()
     dirpath = tempfile.TemporaryDirectory().name
