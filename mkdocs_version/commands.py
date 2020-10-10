@@ -7,10 +7,13 @@ import typing
 import pathlib
 import subprocess
 import signal
+import re
 
 import click
 
 from .version import get_all_tags, get_stable_tag
+
+parse_version = lambda version: version
 
 
 @click.group()
@@ -64,7 +67,7 @@ def generate_version_selector(
         Version: {current_version}
     </div>
     """.format(
-        current_version=current_version.strip("v")
+        current_version=parse_version(current_version)
     )
 
     f = lambda version: """
@@ -72,7 +75,7 @@ def generate_version_selector(
             <a href="/{version}/{current_link}">{version}</a>
         </div>
     """.format(
-        version=version.strip("v"),
+        version=parse_version(version),
         current_link=current_link.lstrip("/"),
     )
     page += "".join(
@@ -145,10 +148,16 @@ def append_version_selector(
 )
 @click.option("--min-version", type=click.Choice(get_all_tags()))
 @click.option("--minor", is_flag=True)
-def build(version: typing.List[str], min_version: str, minor: bool):
+@click.option("--version-regex", default=r"(?P<version>.*)")
+def build(version: typing.List[str], min_version: str, minor: bool, version_regex: str):
+    here = os.getcwd()
     dirpath = tempfile.TemporaryDirectory().name
+    v_pattern = re.compile(version_regex)
+    global parse_version
+    parse_version = lambda v: (
+        v if v in ("stable", "master") else v_pattern.match(v).group("version")
+    )
     try:
-        here = os.getcwd()
         _all_tags = get_all_tags()
         tags = version or (
             _all_tags[_all_tags.index(min_version) :] if min_version else _all_tags
@@ -170,7 +179,7 @@ def build(version: typing.List[str], min_version: str, minor: bool):
         for v, tag in tags.items():
             execute(f"git checkout {tag}")
             execute(f"mkdocs build --clean --site-dir site/{v.strip('v')}")
-            append_version_selector(f"site/{v.strip('v')}", v, tags)
+            append_version_selector(f"site/{parse_version(v)}", v, tags)
         # 构建 stable 版本的文档
         execute(f"git checkout {get_stable_tag()}")
         execute("mkdocs build --clean --site-dir site/stable")
