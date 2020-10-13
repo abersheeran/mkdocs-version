@@ -1,13 +1,13 @@
 import os
-import stat
-import shutil
-import time
-import tempfile
-import typing
 import pathlib
-import subprocess
-import signal
 import re
+import shutil
+import signal
+import stat
+import subprocess
+import tempfile
+import time
+import typing
 
 import click
 
@@ -148,7 +148,14 @@ def append_version_selector(
     default=r"(?P<version>.*)",
     help='Parse version, like: "v(?P<version>.*)"',
 )
-def build(version: typing.List[str], min_version: str, minor: bool, version_regex: str):
+@click.option("--base-dir", default=".", help="The directory where the mkdocs.yml")
+def build(
+    version: typing.List[str],
+    min_version: str,
+    minor: bool,
+    version_regex: str,
+    base_dir: str,
+):
     here = os.getcwd()
     dirpath = tempfile.TemporaryDirectory().name
     v_pattern = re.compile(version_regex)
@@ -166,10 +173,10 @@ def build(version: typing.List[str], min_version: str, minor: bool, version_rege
         else:
             tags = {tag: tag for tag in tags}
         # 清理原始目录中的 site
-        [_rmtree(os.path.join(here, "site")) for _ in range(3)]
+        [_rmtree(os.path.join(here, base_dir, "site")) for _ in range(3)]
         # 复制整个项目到临时目录
         shutil.copytree(here, os.path.join(dirpath, "src"))
-        os.chdir(os.path.join(dirpath, "src"))
+        os.chdir(os.path.join(dirpath, "src", base_dir))
         os.makedirs("site", exist_ok=True)
         # 构建当前分支最新的文档
         execute("mkdocs build --clean --site-dir site/master")
@@ -188,7 +195,8 @@ def build(version: typing.List[str], min_version: str, minor: bool, version_rege
             file.write('<meta http-equiv="refresh" content="0; url=/stable/" />')
 
         shutil.copytree(
-            os.path.join(dirpath, "src", "site"), os.path.join(here, "site")
+            os.path.join(dirpath, "src", base_dir, "site"),
+            os.path.join(here, base_dir, "site"),
         )
     finally:
         [_rmtree(dirpath) for _ in range(3)]

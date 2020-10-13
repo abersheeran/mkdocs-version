@@ -1,5 +1,5 @@
-from typing import List
 from subprocess import check_output
+from typing import List
 
 
 def get_current_branch() -> str:
