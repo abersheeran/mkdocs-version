@@ -99,9 +99,9 @@ def generate_version_selector(
             .version-select {
                 display: none;
                 padding: 0.5em;
-                color: aliceblue;
-                background-color: rgb(64 81 181);
-                border: aliceblue;
+                color: var(--md-primary-bg-color);
+                background-color: var(--md-primary-fg-color);
+                border: var(--md-primary-bg-color);
                 border-radius: 5px;
                 margin: 10px;
                 white-space: nowrap;
