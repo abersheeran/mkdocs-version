@@ -4,7 +4,7 @@ description = "Simple and easy-to-use mkdocs version based on git tags"
 license = "Apache-2.0"
 name = "mkdocs-version"
 readme = "README.md"
-version = "0.1.6"
+version = "0.2.0"
 
 homepage = "https://github.com/abersheeran/mkdocs-version"
 repository = "https://github.com/abersheeran/mkdocs-version"
