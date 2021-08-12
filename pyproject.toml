@@ -24,6 +24,7 @@ mkdocs-version = "mkdocs_version.commands:main"
 python = "^3.6"
 
 click = "^7.1.2"
+cool = "^0.4.0"
 
 [tool.poetry.dev-dependencies]
 black = {version = "*", allow-prereleases = true}
